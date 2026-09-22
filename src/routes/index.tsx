@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft, ArrowRight, Bell, CalendarDays, Check, CheckCircle2, ChevronRight,
   Clock3, Compass, Heart, Home, MapPin, Menu, Search, Share2, SlidersHorizontal,
@@ -37,7 +37,7 @@ function Logo({ light = false }: { light?: boolean }) {
   return <div className={cn("font-display text-3xl leading-none", light ? "text-primary-foreground" : "text-primary")}>SAJ<span className="ml-1 align-top font-sans text-[8px] tracking-[.24em]">BRIDAL</span></div>;
 }
 
-function IconButton({ label, children, onClick, active = false }: { label: string; children: React.ReactNode; onClick?: () => void; active?: boolean }) {
+function IconButton({ label, children, onClick, active = false }: { label: string; children: ReactNode; onClick?: () => void; active?: boolean }) {
   return <Button type="button" variant="glass" size="icon" aria-label={label} title={label} onClick={onClick} className={cn("h-11 w-11 shrink-0", active && "bg-primary text-primary-foreground")}>{children}</Button>;
 }
 
@@ -56,7 +56,7 @@ function IntroFlow({ onFinish }: { onFinish: () => void }) {
     { eyebrow: "DISCOVER YOUR LOOK", copy: "From bridal makeup to the finishing touches.", image: rheaImage },
     { eyebrow: "FIND YOUR ARTIST", copy: "See the work before you book the artist.", image: ananyaImage },
     { eyebrow: "BOOK YOUR MOMENT", copy: "Choose your date. Pick your time. You’re booked.", image: meherImage },
-  ];
+  ] as const;
   if (stage === "splash") return <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-primary px-8 text-center text-primary-foreground">
     <div aria-hidden className="absolute inset-6 rounded-[40%] border border-primary-foreground/10" />
     <div aria-hidden className="absolute left-[-60px] top-24 h-56 w-56 rounded-full border border-primary-foreground/10" />
@@ -68,7 +68,7 @@ function IntroFlow({ onFinish }: { onFinish: () => void }) {
     </div>
   </main>;
   if (stage === "onboarding") {
-    const item = onboarding[slide];
+    const item = onboarding[slide] ?? onboarding[0];
     return <main className="relative min-h-dvh overflow-hidden bg-berry-deep text-primary-foreground">
       <img src={item.image} alt="Indian bridal beauty" width={1024} height={1280} className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-berry-deep via-berry-deep/20 to-transparent" />
@@ -138,7 +138,7 @@ function HomeView({ openArtist, openService, saved, toggleSave, go }: { openArti
 
 function ExploreView({ openArtist, openService, saved, toggleSave }: { openArtist: (a: Artist) => void; openService: (s: Service) => void; saved: number[]; toggleSave: (id: number) => void }) {
   const [query, setQuery] = useState(""); const [category, setCategory] = useState("All"); const [filters, setFilters] = useState(false);
-  const results = artists.filter((a) => `${a.studio} ${a.category} ${a.location}`.toLowerCase().includes(query.toLowerCase()) && (category === "All" || a.category.includes(category.split(" ")[0])));
+  const results = artists.filter((a) => `${a.studio} ${a.category} ${a.location}`.toLowerCase().includes(query.toLowerCase()) && (category === "All" || a.category.includes(category.split(" ")[0] ?? category)));
   return <div className="pb-28 animate-gentle-in"><Header title="Explore" action={<IconButton label="Filters" onClick={() => setFilters(true)}><SlidersHorizontal /></IconButton>} />
     <section className="px-5 pt-6"><h1 className="font-display text-4xl">Find your artist.</h1><div className="relative mt-5"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="What are you looking for?" className="h-14 rounded-full bg-card pl-11" /></div></section>
     <div className="hide-scrollbar flex gap-2 overflow-auto px-5 py-5">{categories.map((c) => <Button key={c} variant={category === c ? "default" : "glass"} className="shrink-0 rounded-full" onClick={() => setCategory(c)}>{c}</Button>)}</div>
@@ -156,7 +156,7 @@ function PortfolioView({ artist, back, openService, saved, toggleSave }: { artis
     <section className="px-5 py-8"><h2 className="font-display text-3xl">Services</h2><div className="mt-4 divide-y divide-border">{services.slice(0, 4).map((s) => <button key={s.id} onClick={() => openService(s)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center py-4 text-left"><span><b>{s.name}</b><small className="mt-1 block text-muted-foreground">{s.duration}</small></span><span className="font-semibold">₹{s.price.toLocaleString("en-IN")} <ChevronRight className="inline size-4" /></span></button>)}</div></section>
     <section className="mx-5 rounded-2xl bg-nude p-5"><div className="flex gap-1 text-primary">★★★★★</div><blockquote className="mt-3 font-display text-xl">“From the trial to the final touch, I felt completely understood.”</blockquote><p className="mt-3 text-xs text-muted-foreground">Mira S. · December bride</p></section>
     <div className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border bg-glass p-3 backdrop-blur-xl"><div className="mx-auto grid max-w-[430px] grid-cols-[1fr_auto] items-center gap-3"><div><small className="text-muted-foreground">Bridal Makeup</small><b className="block">₹25,000</b></div><Button size="lg" onClick={() => openService(services[0])}>Book now <ArrowRight /></Button></div></div>
-    {lightbox !== null && <div className="fixed inset-0 z-[80] flex items-center bg-berry-deep" onClick={() => setLightbox(null)}><img src={gallery[lightbox]} alt="Portfolio detail" className="max-h-dvh w-full object-contain" /><div className="absolute right-4 top-4"><IconButton label="Close gallery" onClick={() => setLightbox(null)}><X /></IconButton></div><span className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs text-primary-foreground">{lightbox + 1} / {gallery.length}</span></div>}
+    {lightbox !== null && <div className="fixed inset-0 z-[80] flex items-center bg-berry-deep" onClick={() => setLightbox(null)}><img src={gallery[lightbox] ?? artist.image} alt="Portfolio detail" className="max-h-dvh w-full object-contain" /><div className="absolute right-4 top-4"><IconButton label="Close gallery" onClick={() => setLightbox(null)}><X /></IconButton></div><span className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs text-primary-foreground">{lightbox + 1} / {gallery.length}</span></div>}
   </div>;
 }
 
