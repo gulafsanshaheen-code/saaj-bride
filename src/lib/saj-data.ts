@@ -22,7 +22,7 @@ export type Service = {
   image: string;
 };
 
-export const createArtists = (images: string[]): Artist[] => [
+export const createArtists = (images: [string, string, string]): Artist[] => [
   { id: 1, name: "Rhea Kapoor", studio: "Rhea Kapoor Beauty", category: "Bridal Makeup", location: "Kolkata", rating: 4.9, reviews: 320, experience: "7 years", image: images[0], tagline: "Bridal looks that feel like you.", bio: "Rhea’s signature is luminous skin, expressive eyes and a finish that still feels beautifully like you." },
   { id: 2, name: "Ananya Sen", studio: "House of Ananya", category: "Soft Glam", location: "Mumbai", rating: 4.9, reviews: 284, experience: "6 years", image: images[1], tagline: "Modern romance, quietly refined.", bio: "Ananya pairs editorial restraint with enduring technique for effortless, camera-ready beauty." },
   { id: 3, name: "Meher Basu", studio: "Meher Atelier", category: "Bengali Bridal", location: "Kolkata", rating: 4.8, reviews: 198, experience: "8 years", image: images[2], tagline: "Tradition, seen through a modern lens.", bio: "Known for artful draping and rich, balanced colour, Meher brings heritage details into the present." },
@@ -33,7 +33,7 @@ export const createArtists = (images: string[]): Artist[] => [
   { id: 8, name: "Naina Arora", studio: "Naina & Co.", category: "Hair & Makeup", location: "Chandigarh", rating: 4.8, reviews: 209, experience: "7 years", image: images[0], tagline: "Considered from every angle.", bio: "Naina’s team creates cohesive hair and makeup stories with calm, detail-led service." },
 ];
 
-export const createServices = (images: string[]): Service[] => [
+export const createServices = (images: [string, string, string]): Service[] => [
   { id: 1, name: "Bridal Makeup", price: 25000, duration: "90 min", description: "A complete, long-wear bridal look thoughtfully tailored to your features, outfit and ceremony.", inclusions: ["Skin preparation", "HD base makeup", "Eye makeup", "Hairstyling", "Lashes & touch-up"], image: images[0] },
   { id: 2, name: "Engagement Glow", price: 15000, duration: "75 min", description: "Soft, luminous makeup for your engagement celebration.", inclusions: ["Skin preparation", "Soft glam makeup", "Hairstyling", "Lashes"], image: images[1] },
   { id: 3, name: "Reception Edit", price: 18000, duration: "90 min", description: "An elevated evening look with polished definition and camera-ready finish.", inclusions: ["Full-face makeup", "Hairstyling", "Lashes", "Draping"], image: images[2] },
