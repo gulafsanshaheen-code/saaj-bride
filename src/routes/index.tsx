@@ -128,6 +128,7 @@ function HomeView({ openArtist, openService, saved, toggleSave, go }: { openArti
       <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">Discover artists, explore their work, and book your bridal services.</p>
       <div className="mt-6 flex gap-3"><Button size="lg" onClick={() => scroller.current?.scrollIntoView({ behavior: "smooth" })}>Explore looks</Button><Button variant="outline" size="lg" onClick={() => go("explore")}>Find a service</Button></div>
     </section>
+    <HomeSearch openArtist={openArtist} openService={openService} />
     <section ref={scroller} className="pt-4">
       <div className="mb-4 flex items-end justify-between px-5"><div><p className="text-[10px] font-bold tracking-[.2em] text-primary">CURATED FOR YOU</p><h2 className="mt-1 font-display text-2xl">Trending bridal looks</h2></div><span className="text-xs text-muted-foreground">{current} / 8</span></div>
       <div className="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-7" onScroll={(e) => setCurrent(Math.min(8, Math.max(1, Math.round(e.currentTarget.scrollLeft / (e.currentTarget.clientWidth * .82)) + 1)))}>{artists.map((artist) => <PortfolioCard key={artist.id} artist={artist} onOpen={() => openArtist(artist)} saved={saved.includes(artist.id)} onSave={() => toggleSave(artist.id)} />)}</div>
@@ -136,15 +137,51 @@ function HomeView({ openArtist, openService, saved, toggleSave, go }: { openArti
   </div>;
 }
 
-function ExploreView({ openArtist, openService, saved, toggleSave }: { openArtist: (a: Artist) => void; openService: (s: Service) => void; saved: number[]; toggleSave: (id: number) => void }) {
-  const [query, setQuery] = useState(""); const [category, setCategory] = useState("All"); const [filters, setFilters] = useState(false);
-  const results = artists.filter((a) => `${a.studio} ${a.category} ${a.location}`.toLowerCase().includes(query.toLowerCase()) && (category === "All" || a.category.includes(category.split(" ")[0] ?? category)));
-  return <div className="pb-28 animate-gentle-in"><Header title="Explore" action={<IconButton label="Filters" onClick={() => setFilters(true)}><SlidersHorizontal /></IconButton>} />
-    <section className="px-5 pt-6"><h1 className="font-display text-4xl">Find your artist.</h1><div className="relative mt-5"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="What are you looking for?" className="h-14 rounded-full bg-card pl-11" /></div></section>
-    <div className="hide-scrollbar flex gap-2 overflow-auto px-5 py-5">{categories.map((c) => <Button key={c} variant={category === c ? "default" : "glass"} className="shrink-0 rounded-full" onClick={() => setCategory(c)}>{c}</Button>)}</div>
-    <section className="px-5"><h2 className="mb-4 font-display text-2xl">Popular near you</h2><div className="space-y-3">{results.map((a) => <article key={a.id} className="grid grid-cols-[100px_minmax(0,1fr)_44px] gap-3 rounded-2xl bg-card p-2 shadow-sm"><button onClick={() => openArtist(a)}><img src={a.image} alt={a.studio} loading="lazy" width={1024} height={1280} className="h-28 w-full rounded-xl object-cover" /></button><button onClick={() => openArtist(a)} className="min-w-0 py-2 text-left"><h3 className="truncate font-display text-lg">{a.studio}</h3><p className="mt-1 text-xs text-muted-foreground">{a.category}</p><p className="mt-3 flex items-center gap-1 text-xs"><Star className="size-3 fill-primary text-primary" /> {a.rating} · {a.location}</p></button><IconButton label="Save artist" active={saved.includes(a.id)} onClick={() => toggleSave(a.id)}><Heart className={cn(saved.includes(a.id) && "fill-current")} /></IconButton></article>)}</div></section>
-    <section className="mt-8 px-5"><h2 className="mb-4 font-display text-2xl">Services</h2><div className="space-y-2">{services.slice(0, 6).map((s) => <button key={s.id} onClick={() => openService(s)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-2xl border border-border bg-card p-4 text-left"><span><b className="block text-sm">{s.name}</b><small className="text-muted-foreground">{s.duration} · from ₹{s.price.toLocaleString("en-IN")}</small></span><ChevronRight className="size-4" /></button>)}</div></section>
-    {filters && <div className="fixed inset-0 z-[70] flex items-end bg-berry-deep/45" onClick={() => setFilters(false)}><div className="w-full animate-gentle-in rounded-t-[28px] bg-background p-6" onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between"><h2 className="font-display text-3xl">Refine your edit</h2><IconButton label="Close filters" onClick={() => setFilters(false)}><X /></IconButton></div><div className="mt-6 grid grid-cols-2 gap-3">{["Date", "Location", "Price", "Rating", "Service", "Style"].map((x) => <Button variant="outline" className="h-12 rounded-2xl" key={x}>{x}</Button>)}</div><Button size="lg" className="mt-6 w-full" onClick={() => setFilters(false)}>Show {results.length} artists</Button></div></div>}
+function HomeSearch({ openArtist, openService }: { openArtist: (a: Artist) => void; openService: (s: Service) => void }) {
+  const [query, setQuery] = useState(""); const [category, setCategory] = useState("All");
+  const q = query.trim().toLowerCase();
+  const matchA = artists.filter((a) => (!q || `${a.studio} ${a.name} ${a.category} ${a.location}`.toLowerCase().includes(q)) && (category === "All" || a.category.includes(category.split(" ")[0] ?? category)));
+  const matchS = services.filter((s) => q && s.name.toLowerCase().includes(q));
+  const active = q || category !== "All";
+  return <section className="px-5 pb-2">
+    <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search artists, services, cities" className="h-14 rounded-full border-glass-border bg-glass pl-11 shadow-glass backdrop-blur-xl" />{query && <button aria-label="Clear search" onClick={() => setQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="size-4" /></button>}</div>
+    <div className="hide-scrollbar -mx-5 flex gap-2 overflow-auto px-5 py-4">{categories.map((c) => <Button key={c} size="sm" variant={category === c ? "default" : "glass"} className="shrink-0 rounded-full" onClick={() => setCategory(c)}>{c}</Button>)}</div>
+    {active && <div className="animate-gentle-in space-y-2 rounded-3xl border border-glass-border bg-glass p-2 shadow-glass backdrop-blur-xl">
+      {matchS.map((s) => <button key={`s${s.id}`} onClick={() => openService(s)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-2xl p-3 text-left hover:bg-muted"><span className="min-w-0"><b className="block truncate text-sm">{s.name}</b><small className="text-muted-foreground">Service · from ₹{s.price.toLocaleString("en-IN")}</small></span><ChevronRight className="size-4" /></button>)}
+      {matchA.map((a) => <button key={a.id} onClick={() => openArtist(a)} className="grid w-full grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl p-2 text-left hover:bg-muted"><img src={a.image} alt="" className="h-12 w-12 rounded-xl object-cover" /><span className="min-w-0"><b className="block truncate text-sm">{a.studio}</b><small className="text-muted-foreground">{a.category} · {a.location}</small></span><ChevronRight className="size-4" /></button>)}
+      {!matchA.length && !matchS.length && <p className="p-4 text-center text-sm text-muted-foreground">No matches yet — try another word.</p>}
+    </div>}
+  </section>;
+}
+
+function ExploreView({ openArtist, saved, toggleSave }: { openArtist: (a: Artist) => void; saved: number[]; toggleSave: (id: number) => void }) {
+  const [liked, setLiked] = useState<number[]>([]);
+  const glass = "border border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground backdrop-blur-xl";
+  return <div className="fixed inset-0 z-40 mx-auto max-w-[560px] bg-berry-deep">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between p-5 pt-6">
+      <span className="font-display text-2xl text-primary-foreground">Reels</span>
+      <span className={cn("rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[.18em]", glass)}>BRIDAL EDIT</span>
+    </div>
+    <div className="hide-scrollbar h-dvh snap-y snap-mandatory overflow-y-auto">
+      {artists.map((a, i) => { const isLiked = liked.includes(a.id); const isSaved = saved.includes(a.id); return <section key={a.id} className="relative h-dvh snap-start snap-always overflow-hidden">
+        <img src={a.image} alt={a.studio} loading={i < 2 ? "eager" : "lazy"} className="absolute inset-0 h-full w-full scale-105 object-cover" style={{ objectPosition: `${[50, 30, 70][i % 3]}% ${[20, 40, 30][i % 3]}%` }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-berry-deep/40 via-transparent to-berry-deep/90" />
+        <div className="absolute bottom-[300px] right-4 z-10 flex flex-col items-center gap-4">
+          {[{ l: isLiked ? "Unlike" : "Like", icon: <Heart className={cn("size-5", isLiked && "fill-current")} />, n: a.reviews * 7 + (isLiked ? 1 : 0), on: () => setLiked((o) => isLiked ? o.filter((x) => x !== a.id) : [...o, a.id]) },
+            { l: isSaved ? "Unsave" : "Save", icon: <Sparkles className={cn("size-5", isSaved && "fill-current")} />, n: isSaved ? "Saved" : "Save", on: () => toggleSave(a.id) },
+            { l: "Share", icon: <Share2 className="size-5" />, n: "Share", on: () => navigator.share?.({ title: a.studio }).catch(() => {}) }].map((b) =>
+            <button key={b.l} aria-label={b.l} onClick={b.on} className="flex flex-col items-center gap-1 text-primary-foreground"><span className={cn("grid h-12 w-12 place-items-center rounded-full shadow-glass transition-transform active:scale-90", glass)}>{b.icon}</span><span className="text-[10px] font-semibold">{b.n}</span></button>)}
+        </div>
+        <div className="absolute inset-x-3 bottom-24 z-10">
+          <div className={cn("rounded-[26px] p-4 shadow-luxury", glass)}>
+            <div className="flex items-center gap-3"><img src={a.image} alt="" className="h-10 w-10 rounded-full border border-primary-foreground/50 object-cover" /><div className="min-w-0 flex-1"><h2 className="truncate font-display text-xl leading-tight">{a.studio}</h2><p className="text-[11px] text-primary-foreground/75"><Star className="mr-1 inline size-3 fill-current" />{a.rating} · {a.category} · {a.location}</p></div></div>
+            <p className="mt-3 text-sm leading-snug text-primary-foreground/90">{a.tagline}</p>
+            <Button onClick={() => openArtist(a)} className="mt-3 h-11 w-full rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90">View portfolio <ArrowRight className="size-4" /></Button>
+          </div>
+        </div>
+        <span className="absolute right-5 top-16 z-10 text-[10px] font-semibold tracking-[.2em] text-primary-foreground/70">{String(i + 1).padStart(2, "0")} / {String(artists.length).padStart(2, "0")}</span>
+      </section>; })}
+    </div>
   </div>;
 }
 
@@ -219,7 +256,7 @@ function SajApp() {
   const openArtist = (a: Artist) => { setArtist(a); navigate("portfolio"); }; const openService = (s: Service) => { setService(s); navigate("service"); };
   const content = useMemo(() => {
     if (view === "home") return <HomeView openArtist={openArtist} openService={openService} saved={saved} toggleSave={toggleSave} go={navigate} />;
-    if (view === "explore") return <ExploreView openArtist={openArtist} openService={openService} saved={saved} toggleSave={toggleSave} />;
+    if (view === "explore") return <ExploreView openArtist={openArtist} saved={saved} toggleSave={toggleSave} />;
     if (view === "portfolio") return <PortfolioView artist={artist} back={() => navigate("home")} openService={openService} saved={saved.includes(artist.id)} toggleSave={() => toggleSave(artist.id)} />;
     if (view === "service") return <ServiceView service={service} back={() => navigate("portfolio")} book={() => navigate("booking")} />;
     if (view === "booking") return <BookingFlow service={service} artist={artist} cancel={() => navigate("service")} confirm={(date, time, selection) => { setBooking({ date, time, selection }); localStorage.setItem("saj-booking", JSON.stringify({ date, time, selection, artist: artist.studio })); navigate("confirmation"); }} />;
