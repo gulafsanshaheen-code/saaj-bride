@@ -166,7 +166,7 @@ function ExploreView({ openArtist, saved, toggleSave }: { openArtist: (a: Artist
       {artists.map((a, i) => { const isLiked = liked.includes(a.id); const isSaved = saved.includes(a.id); return <section key={a.id} className="relative h-dvh snap-start snap-always overflow-hidden">
         <img src={a.image} alt={a.studio} loading={i < 2 ? "eager" : "lazy"} className="absolute inset-0 h-full w-full scale-105 object-cover" style={{ objectPosition: `${[50, 30, 70][i % 3]}% ${[20, 40, 30][i % 3]}%` }} />
         <div className="absolute inset-0 bg-gradient-to-b from-berry-deep/40 via-transparent to-berry-deep/90" />
-        <div className="absolute bottom-40 right-4 z-10 flex flex-col items-center gap-4">
+        <div className="absolute bottom-[300px] right-4 z-10 flex flex-col items-center gap-4">
           {[{ l: isLiked ? "Unlike" : "Like", icon: <Heart className={cn("size-5", isLiked && "fill-current")} />, n: a.reviews * 7 + (isLiked ? 1 : 0), on: () => setLiked((o) => isLiked ? o.filter((x) => x !== a.id) : [...o, a.id]) },
             { l: isSaved ? "Unsave" : "Save", icon: <Sparkles className={cn("size-5", isSaved && "fill-current")} />, n: isSaved ? "Saved" : "Save", on: () => toggleSave(a.id) },
             { l: "Share", icon: <Share2 className="size-5" />, n: "Share", on: () => navigator.share?.({ title: a.studio }).catch(() => {}) }].map((b) =>
