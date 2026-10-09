@@ -107,13 +107,13 @@ function PortfolioCard({ artist, onOpen, saved, onSave }: { artist: Artist; onOp
   </article>;
 }
 
-function BottomNav({ view, go }: { view: View; go: (view: View) => void }) {
+function BottomNav({ view, go, savedCount }: { view: View; go: (view: View) => void; savedCount: number }) {
   const items: { label: string; view: View; icon: typeof Home }[] = [
     { label: "Home", view: "home", icon: Home }, { label: "Explore", view: "explore", icon: Compass },
     { label: "Bookings", view: "bookings", icon: CalendarDays }, { label: "Saved", view: "saved", icon: Heart }, { label: "Profile", view: "profile", icon: UserRound },
   ];
   return <nav className="safe-bottom fixed inset-x-3 bottom-2 z-50 mx-auto flex max-w-[440px] items-center justify-around rounded-[22px] border border-glass-border bg-glass px-1 pt-2 shadow-glass backdrop-blur-2xl">
-    {items.map(({ label, view: target, icon: Icon }) => <Button key={label} variant="ghost" onClick={() => go(target)} className={cn("h-12 min-w-14 flex-col gap-0.5 rounded-xl px-2 text-[9px]", view === target ? "text-primary" : "text-muted-foreground")}><Icon className={cn("size-5", view === target && label === "Saved" && "fill-current")} /><span>{label}</span></Button>)}
+    {items.map(({ label, view: target, icon: Icon }) => { const count = target === "saved" ? savedCount : 0; return <Button key={label} variant="ghost" aria-label={count > 0 ? `${label}, ${count} ${count === 1 ? "artist" : "artists"}` : undefined} onClick={() => go(target)} className={cn("h-12 min-w-14 flex-col gap-0.5 rounded-xl px-2 text-[9px]", view === target ? "text-primary" : "text-muted-foreground")}><span className="relative flex"><Icon className={cn("size-5", view === target && label === "Saved" && "fill-current")} />{count > 0 && <span key={count} aria-hidden className="absolute -right-2.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground ring-2 ring-card animate-in zoom-in-50 duration-300">{count}</span>}</span><span>{label}</span></Button>; })}
   </nav>;
 }
 
@@ -302,5 +302,5 @@ function SajApp() {
   }, [view, artist, service, saved, booking]);
   if (intro !== "app") return <IntroFlow onFinish={() => { localStorage.setItem("saj-onboarded", "true"); setIntro("app"); }} />;
   const hideNav = ["portfolio", "service", "booking", "confirmation", "tracking"].includes(view);
-  return <div className="mx-auto min-h-dvh max-w-[560px] bg-background shadow-[0_0_70px_color-mix(in_oklab,var(--berry-deep)_10%,transparent)]">{content}{!hideNav && <BottomNav view={view} go={navigate} />}</div>;
+  return <div className="mx-auto min-h-dvh max-w-[560px] bg-background shadow-[0_0_70px_color-mix(in_oklab,var(--berry-deep)_10%,transparent)]">{content}{!hideNav && <BottomNav view={view} go={navigate} savedCount={saved.length} />}</div>;
 }
